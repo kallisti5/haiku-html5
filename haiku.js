@@ -12,6 +12,8 @@
 var logDiv;
 var desktop;	// the canvas
 
+var inputSocket = null;
+
 var b64Values = new Array(
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -127,7 +129,7 @@ function createXHR()
 function onMessage(message)
 {
 	dbg("onMessage: ");
-window.popup("plop");
+	window.popup("plop");
 	dbg(message.target.responseText);
 }
 
@@ -186,32 +188,27 @@ function initDesktop()
 	var msg = {s:"YWJjZA==YWI=YQ==VQ==qg==qlU=Vao=VaqqVQ==qlVVqg==",i:0};
 	decodeCanvasMessage(stream);
 
+	//var loc = window.location.toString().replace("http:", "ws:").replace("https:", "wss:");
+	//loc = loc.substr(0, loc.lastIndexOf('/')) + "/output";
+	var loc = "ws://98.194.181.124:8080/output";
+
+	dbg(loc);
 	desktop = document.getElementById("desktop");
-	var xhr = createXHR();
-	if (xhr) {
-		if (typeof xhr.multipart != "undefined")
-			xhr.multipart = true;
-		else {
-			err("XHR has no multipart field!");
-			return;
-		}
-		if (typeof xhr.async != "undefined")
-			xhr.async = true;
-		else {
-			dbg("XHR has no async field!");
-		}
-		dbg("multipart: " + xhr.multipart);
-		xhr.open("GET", "http://127.0.0.1:8080/output", true);
-		//xhr.onload = onMessage;
-		xhr.onreadystatechange = onReadyStateChange;
-		//xhr.responseType = "arraybuffer";
-		//dbg("xhr.onload:" + xhr.onload);
-		//dbg("xhr.send:" + xhr.send);
-		//xhr.overrideMimeType("multipart/x-mixed-replace;boundary=x");
-		xhr.send(null);
-		//dbg("headers: " + xhr.getAllResponseHeaders());
-	} else
-		err("No XHR");
+
+	var ws = new WebSocket(loc, "desktop");
+	ws.binaryType = "arraybuffer";
+
+	ws.onopen = function() {
+		inputSocket = ws;
+ 	};
+	ws.onclose = function() {
+		if (inputSocket != null)
+			alert ("disconnected");
+			inputSocket = null;
+		};
+ 		ws.onmessage = function(event) {
+		handleMessage(event.data);
+	};
 	dbg("done");
 }
 
