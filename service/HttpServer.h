@@ -9,25 +9,28 @@
 #ifndef WEB_SERVER_H
 #define WEB_SERVER_H
 
-//#include "WebWorker.h"
+
+//#include "HttpWorker.h"
 
 #include <Locker.h>
 #include <ObjectList.h>
 #include <OS.h>
 #include <SupportDefs.h>
 
-class BNetEndpoint;
-class WebHandler;
-class WebWorker;
 
-class WebServer {
+class BNetEndpoint;
+class HttpHandler;
+class HttpWorker;
+
+
+class BHttpServer {
 public:
-								WebServer(BNetEndpoint *listener);
-								~WebServer();
+								BHttpServer(BNetEndpoint *listener);
+								~BHttpServer();
 
 //		BNetEndpoint *			Endpoint() { return fEndpoint; }
 
-		void					AddHandler(WebHandler *handler);
+		void					AddHandler(HttpHandler *handler);
 
 private:
 static	int32					_NetworkReceiverEntry(void *data);
@@ -39,8 +42,8 @@ static	int32					_NetworkReceiverEntry(void *data);
 		bool					fStopThread;
 
 		BLocker					fLocker;
-		BObjectList<WebHandler>	fHandlers;
-		BObjectList<WebWorker>	fWorkers;
+		BObjectList<HttpHandler>	fHandlers;
+		BObjectList<HttpWorker>	fWorkers;
 //		BNetEndpoint *			fEndpoint;
 };
 

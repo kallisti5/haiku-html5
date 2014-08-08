@@ -1,35 +1,36 @@
 /*
- * Copyright 2009, Haiku, Inc.
+ * Copyright 2009-2014, Haiku, Inc.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
  *		Michael Lotz <mmlr@mlotz.ch>
  *		François Revol <revol@free.fr>
+ *		Alexander von Gluck IV <kallisti5@unixzen.com>
  */
 
-#include "WebHandler.h"
-#include "WebServer.h"
-#include "WebWorker.h"
-
-#include "StreamingRingBuffer.h"
+#include "HttpServer.h"
 
 #include <NetEndpoint.h>
 #include <Autolock.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define TRACE(x...)			debug_printf("WebServer: "x)
-#define TRACE_ERROR(x...)	debug_printf("WebServer: "x)
+#include "HttpHandler.h"
+#include "HttpWorker.h"
+#include "StreamingRingBuffer.h"
 
 
-WebServer::WebServer(BNetEndpoint *listener)
+#define TRACE(x...)			debug_printf("BHttpServer: "x)
+#define TRACE_ERROR(x...)	debug_printf("BHttpServer: "x)
+
+
+BHttpServer::BHttpServer(BNetEndpoint *listener)
 	:
 	fListener(listener),
 	fReceiverThread(-1),
 	fStopThread(false),
-	fLocker("WebServer locker")
+	fLocker("BHttpServer locker")
 {
 	fReceiverThread = spawn_thread(_NetworkReceiverEntry, "html5 server",
 		B_NORMAL_PRIORITY, this);
@@ -37,7 +38,7 @@ WebServer::WebServer(BNetEndpoint *listener)
 }
 
 
-WebServer::~WebServer()
+BHttpServer::~BHttpServer()
 {
 	fStopThread = true;
 
@@ -53,21 +54,21 @@ WebServer::~WebServer()
 
 
 void
-WebServer::AddHandler(WebHandler *handler)
+BHttpServer::AddHandler(HttpHandler *handler)
 {
 	BAutolock lock(fLocker);
 	fHandlers.AddItem(handler);
 }
 
 int32
-WebServer::_NetworkReceiverEntry(void *data)
+BHttpServer::_NetworkReceiverEntry(void *data)
 {
-	return ((WebServer *)data)->_NetworkReceiver();
+	return ((BHttpServer *)data)->_NetworkReceiver();
 }
 
 
 status_t
-WebServer::_NetworkReceiver()
+BHttpServer::_NetworkReceiver()
 {
 	status_t result = fListener->Listen();
 	if (result != B_OK) {
@@ -75,7 +76,7 @@ WebServer::_NetworkReceiver()
 		return result;
 	}
 
-	fHandlers.SortItems(&WebHandler::_CallbackCompare);
+	fHandlers.SortItems(&HttpHandler::_CallbackCompare);
 
 	while (!fStopThread) {
 		BNetEndpoint *endpoint = fListener->Accept(1000);
@@ -121,12 +122,12 @@ WebServer::_NetworkReceiver()
 					if (p == s)
 						path = "desktop.html";
 					TRACE("searching handler for '%s'\n", path.String());
-					WebHandler *handler = fHandlers.BinarySearchByKey(
-						path, &WebHandler::_CallbackCompare);
+					HttpHandler *handler = fHandlers.BinarySearchByKey(
+						path, &HttpHandler::_CallbackCompare);
 					if (handler) {
 						TRACE("found handler '%s'\n", handler->Name().String());
-						WebWorker *worker =
-							new (std::nothrow) WebWorker(endpoint, handler);
+						HttpWorker *worker =
+							new (std::nothrow) HttpWorker(endpoint, handler);
 						if (worker) {
 							fWorkers.AddItem(worker);
 							break;
