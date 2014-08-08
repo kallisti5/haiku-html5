@@ -34,7 +34,7 @@ APP_MIME_SIG=
 #	if two source files with the same name (source.c or source.cpp)
 #	are included from different directories.  Also note that spaces
 #	in folder names do not work well with this makefile.
-SRCS=HttpServer.cpp HttpHandler.cpp HttpWorker.cpp StreamingRingBuffer.cpp maintest.cpp
+SRCS=HttpServer.cpp HttpHandler.cpp HttpWorker.cpp maintest.cpp
 
 #	specify the resource definition files to use
 #	full path or a relative path to the resource file can be used.

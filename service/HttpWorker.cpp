@@ -10,13 +10,13 @@
 #include "HttpHandler.h"
 #include "HttpWorker.h"
 
-#include "StreamingRingBuffer.h"
-
+#include <NetBuffer.h>
 #include <NetEndpoint.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 #define TRACE(x...)			debug_printf("HttpWorker: "x)
 #define TRACE_ERROR(x...)	debug_printf("HttpWorker: "x)
@@ -65,9 +65,9 @@ HttpWorker::_Work()
 	status_t result;
 	TRACE("new endpoint connection: %p\n", fEndpoint);
 
-	BDataIO *io = fHandler->fData;
-	BPositionIO *pio = dynamic_cast<BPositionIO *>(io);
-	StreamingRingBuffer *rb = fHandler->fTarget;
+	BDataIO* io = fHandler->fData;
+	BPositionIO* pio = dynamic_cast<BPositionIO *>(io);
+	BNetBuffer* netBuffer = fHandler->fTarget;
 
 	if (pio)
 		pio->GetSize(&contentSize);
@@ -113,8 +113,12 @@ HttpWorker::_Work()
 			readSize = pio->ReadAt(pos, buffer, sizeof(buffer));
 		else if (io)
 			readSize = io->Read(buffer, sizeof(buffer));
-		else if (rb)
-			readSize = rb->Read(buffer, sizeof(buffer));
+		else if (netBuffer) {
+			readSize = netBuffer->Size();
+			if (readSize > sizeof(buffer))
+				readSize = sizeof(buffer);
+			netBuffer->RemoveData(buffer, readSize);
+		}
 		TRACE("readSize %ld\n", readSize);
 
 		if (readSize < 0) {

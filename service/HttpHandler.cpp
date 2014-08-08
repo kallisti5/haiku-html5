@@ -1,21 +1,23 @@
 /*
- * Copyright 2009, Haiku, Inc.
+ * Copyright 2009-2014, Haiku, Inc.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
  *		Michael Lotz <mmlr@mlotz.ch>
  *		François Revol <revol@free.fr>
+ *		Alexander von Gluck IV <kallisti5@unixzen.com>
  */
+
 
 #include "HttpHandler.h"
 
-#include "StreamingRingBuffer.h"
-
+#include <NetBuffer.h>
 #include <NetEndpoint.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 #define TRACE(x...)			debug_printf("HttpHandler: "x)
 #define TRACE_ERROR(x...)	debug_printf("HttpHandler: "x)
@@ -32,7 +34,7 @@ HttpHandler::HttpHandler(const char *path, BDataIO *data)
 }
 
 
-HttpHandler::HttpHandler(const char *path, StreamingRingBuffer *target)
+HttpHandler::HttpHandler(const char *path, BNetBuffer* target)
 	:
 	fPath(path),
 	fMultipart(false),

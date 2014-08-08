@@ -18,7 +18,6 @@
 
 #include "HttpHandler.h"
 #include "HttpWorker.h"
-#include "StreamingRingBuffer.h"
 
 
 #define TRACE(x...)			debug_printf("BHttpServer: "x)

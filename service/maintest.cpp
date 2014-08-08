@@ -1,8 +1,8 @@
 
+#include <NetBuffer.h>
 #include <NetEndpoint.h>
 
 #include <stdio.h>
-#include "StreamingRingBuffer.h"
 #include "HttpServer.h"
 #include "HttpHandler.h"
 
@@ -14,9 +14,10 @@ main()
 	receiveEndpoint->Bind(8080);
 
 	// TODO: Replace StreamingRingBuffer with BNetBuffer or BDynamicBuffer
-	StreamingRingBuffer* sendBuffer = new(std::nothrow) StreamingRingBuffer(16 * 1024);
+	BNetBuffer sendBuffer(16 * 1024);
+	//StreamingRingBuffer* sendBuffer = new(std::nothrow) StreamingRingBuffer(16 * 1024);
 	BHttpServer* httpServer = new(std::nothrow) BHttpServer(receiveEndpoint);
-	HttpHandler* handler = new(std::nothrow) HttpHandler("output", sendBuffer);
+	HttpHandler* handler = new(std::nothrow) HttpHandler("output", &sendBuffer);
 
 	httpServer->AddHandler(handler);
 	
